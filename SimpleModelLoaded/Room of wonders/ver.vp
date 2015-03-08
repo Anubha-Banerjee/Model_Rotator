@@ -1,0 +1,31 @@
+#version 130
+// vertex shader inputs (comes from the CPU in vertex buffer)
+in vec4 vPosition;
+in vec3 vNormal;
+in vec4 vTexture;
+
+// the matrices
+uniform mat3 normalMatrix;
+uniform mat4 mvMatrix;
+uniform mat4 mvpMatrix;
+
+uniform vec3 lightPosition; // position of light in view space
+uniform int sign;
+
+// vertex shader outputs
+out vec3 interpolateNormal;
+out vec3 interpolateLightVector;
+out vec2 textureCoord;
+
+void main()
+{
+    interpolateNormal = normalMatrix * vNormal * sign;
+    
+    vec4 vPos4 = (mvMatrix * vPosition);
+    vec3 vPos3 = vPos4.xyz / vPos4.w;
+    
+    interpolateLightVector = normalize(lightPosition - vPos3);		
+    gl_Position = mvpMatrix * vPosition;
+    
+    textureCoord=vTexture.st;
+}

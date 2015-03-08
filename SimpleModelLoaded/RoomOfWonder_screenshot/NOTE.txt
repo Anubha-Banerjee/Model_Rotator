@@ -1,0 +1,1 @@
+I have the full 3D openGL application but it won't fit in 5 MB, so attaching only the screenshot
