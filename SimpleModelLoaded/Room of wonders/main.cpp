@@ -21,7 +21,10 @@ sockaddr_in serverAddr, clientAddr;	//vars for storing addresses
 int clientLength=0,msg_length;
 char dataToSend[2048],dataRecieved[2048];
 float prev_yaw,prev_roll,prev_pitch;
+float rotnMatrix[16];
+float smoothMatrix[16];
 
+float transpose[16];
 using namespace std;
 
 // vertices
@@ -244,7 +247,9 @@ void setup()
     glGenTextures(1,&Tex_heron);
     glBindTexture(GL_TEXTURE_2D,Tex_heron);	
     LoadTGATexture("copper.tga", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT);
-
+	for (int i = 0; i < 16; i++) {
+		smoothMatrix[i] = 0;
+	}
 }
 
 void updateMatrices()
@@ -338,9 +343,10 @@ Rotation parseDataRecieved(string data) {
 	
 	return rotn;
 }
-float rotnMatrix[16];
-float transpose[16];
+
 void parseRotnMatrix(string data) {
+
+
 	string currentWord =  "";
 	Rotation rotnrender;
 
@@ -378,8 +384,7 @@ float mod(float num) {
 	else return num;
 }
 Rotation currentRotn;
-FILE *fp = fopen("d:\\rotatationMatrix.txt", "r+");
-void render()
+void render() 
 {
 	float yaw, roll, pitch;
 	char *token = " ";
@@ -388,7 +393,19 @@ void render()
 	if (dataRecieved[0] != NULL) {
 		printf("%s\n", dataRecieved);
 	 	parseRotnMatrix(dataRecieved);
+		
 	}
+	float alpha = 0.7;
+	for (int i = 0; i < 16; i++) {		
+		smoothMatrix[i] = alpha * smoothMatrix[i] + (1 - alpha) * rotnMatrix[i];
+	};
+
+
+	//float thetaX = atan2(rotnMatrix[9], rotnMatrix[10]);
+	//float thetaY = atan2(-1 * rotnMatrix[8], sqrt((rotnMatrix[9] * rotnMatrix[9]) + (rotnMatrix[10] * rotnMatrix[10])));
+	//float thetaZ = atan2(rotnMatrix[4], rotnMatrix[0]);
+	
+		
 	//fprintf(fp, "%s\n", "=============================");
 	
 	Sleep(100);
@@ -413,7 +430,7 @@ void render()
 	
     //the herons
     object heron;
-	modelViewMatrix.MultMatrix(rotnMatrix);
+	modelViewMatrix.MultMatrix(smoothMatrix);
     heron.noShine=0;	
     heron.scale[0]=120;
     heron.scale[1]=120;
